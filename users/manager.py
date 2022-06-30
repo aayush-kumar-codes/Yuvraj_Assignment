@@ -4,8 +4,13 @@ from django.utils.translation import gettext_lazy as _
 
 class NewUserManager(BaseUserManager):
 
+    """
+        Custom user manager
+    """
+
     def create_user(self, email, user_name, first_name, last_name, gender, age, country=None, city=None, password=None, **extra_fields):
 
+        """creates a new user in the db"""
         if not email:
             raise ValueError(_('Email must be provided'))
 
@@ -20,6 +25,7 @@ class NewUserManager(BaseUserManager):
 
     def create_superuser(self, email, user_name, first_name, last_name, gender, age, password, **extra_fields):
 
+        """creates a superuser"""
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True)

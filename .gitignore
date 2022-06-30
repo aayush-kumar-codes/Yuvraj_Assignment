@@ -1,5 +1,5 @@
 env
 db.sqlite3
 __pycache__/
-*_initial.py
-*_auto_*.py
+migrations/
+!__init__.py

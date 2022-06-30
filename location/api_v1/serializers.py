@@ -20,6 +20,7 @@ class CountrySerializer(ModelSerializer):
         fields = ['id', 'name', 'cities']
 
     def get_cities(self, obj):
+        """Get all cities of a particular country"""
         cities = City.objects.filter(country=obj)
         serializer = CitySerializer(cities, many=True)
         return serializer.data

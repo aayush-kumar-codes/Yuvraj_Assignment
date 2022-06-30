@@ -1,6 +1,6 @@
 from django.db.models import Sum
 
-from rest_framework.serializers import ModelSerializer, SerializerMethodField, Serializer
+from rest_framework.serializers import ModelSerializer
 
 from sales.models import Sales
 

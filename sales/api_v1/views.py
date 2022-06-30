@@ -1,16 +1,16 @@
-from sales.stats import Stats
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.viewsets import ViewSet, ModelViewSet
+from rest_framework.viewsets import ViewSet
 from rest_framework import status
 
+from sales.stats import Stats
 from .serializers import SalesSerializer, SalesSerializerList
 from sales.models import Sales
 
 
 class SalesUploadView(APIView):
     """
-        view for uploading test data
+        view for uploading csv file data
     """
 
     def post(self, request):
@@ -30,7 +30,7 @@ class SalesUploadView(APIView):
             except IndexError:
                 pass
 
-        return Response({})
+        return Response({"detail": "Data uploaded successfully"}, status=status.HTTP_201_CREATED)
 
 
 class SalesViewSet(ViewSet):
@@ -38,36 +38,33 @@ class SalesViewSet(ViewSet):
         contains all CRUD functionalities for Sales model
     """
 
-    def get_queryset(self, request, pk):
-        # get the sales data of current user by id
-        try:
-            queryset = Sales.objects.get(user=request.user, pk=pk)
-            return queryset
-        except Sales.DoesNotExist:
-            return
-
     def list(self, request):
         queryset = Sales.objects.filter(user=request.user)
         serializer = SalesSerializerList(queryset, many=True)
         return Response(serializer.data)
 
     def retrieve(self, request, pk=None):
-        queryset = Sales.objects.filter(user=request.user, pk=pk)
+        try:
+            queryset = Sales.objects.get(user=request.user, pk=pk)
+        except Sales.DoesNotExist:
+            return Response({"detail": f"Sales data with id: {pk}, does not exists."}, status=status.HTTP_404_NOT_FOUND)
+
         serializer = SalesSerializerList(queryset)
         return Response(serializer.data)
 
     def create(self, request):
+        user = request.user
         serializer = SalesSerializerList(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(user=user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors)
 
     def update(self, request, pk=None):
-        queryset = self.get_queryset(request, pk)
-
-        if not queryset:
-            return Response({"detail": f"Sales data with id: {pk}, does not exists."})
+        try:
+            queryset = Sales.objects.get(user=request.user, pk=pk)
+        except Sales.DoesNotExist:
+            return Response({"detail": f"Sales data with id: {pk}, does not exists."}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = SalesSerializer(instance=queryset, data=request.data)
 
@@ -77,10 +74,10 @@ class SalesViewSet(ViewSet):
         return Response(serializer.errors)
 
     def partial_update(self, request, pk=None):
-        queryset = self.get_queryset(request, pk)
-
-        if not queryset:
-            return Response({"detail": f"Sales data with id: {pk}, does not exists."})
+        try:
+            queryset = Sales.objects.get(user=request.user, pk=pk)
+        except Sales.DoesNotExist:
+            return Response({"detail": f"Sales data with id: {pk}, does not exists."}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = SalesSerializer(
             instance=queryset, data=request.data, partial=True)
@@ -91,14 +88,13 @@ class SalesViewSet(ViewSet):
         return Response(serializer.errors)
 
     def destroy(self, request, pk=None):
-        queryset = self.get_queryset(request, pk)
-
-        if not queryset:
-            return Response({"detail": f"Sales data with id: {pk}, does not exists."})
+        try:
+            queryset = Sales.objects.get(user=request.user, pk=pk)
+        except Sales.DoesNotExist:
+            return Response({"detail": f"Sales data with id: {pk}, does not exists."}, status=status.HTTP_404_NOT_FOUND)
 
         queryset.delete()
         return Response({}, status=status.HTTP_204_NO_CONTENT)
-
 
 
 class StatisticsView(APIView):

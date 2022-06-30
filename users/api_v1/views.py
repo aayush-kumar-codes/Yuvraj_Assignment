@@ -4,19 +4,20 @@ from django.contrib.auth import authenticate
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.serializers import ValidationError
-from rest_framework.permissions import AllowAny
-from rest_framework.generics import RetrieveAPIView, UpdateAPIView
+from rest_framework.generics import RetrieveAPIView, UpdateAPIView, CreateAPIView
 from rest_framework.status import (
-    HTTP_200_OK, HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST
+    HTTP_200_OK, HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST, HTTP_201_CREATED
 )
 
 from users.permissions import UpdateDetailPermission
 
-from users.validators import password_validator
-from users.utils import normalize_validation_error
 from . import serializers
 from users.models import NewUser
+from users.validators import password_validator
+from users.utils import normalize_validation_error
+from .custom_swagger import RegisterField
 
 
 class RegisterView(APIView):
@@ -24,10 +25,21 @@ class RegisterView(APIView):
 
     permission_classes = [AllowAny]
 
+    def get_serializer(self):
+        return RegisterField()
+
     def post(self, request):
 
         password = request.data.get('password')
         confirm_password = request.data.get('confirm_password')
+        country = request.data.get('country', None)
+        city = request.data.get('city', None)
+
+        if not country:
+            return Response({"detail": "country field can't be empty"})
+
+        if not city:
+            return Response({"detail": "city field can't be empty"})
 
         try:
             password_validator(password, confirm_password)
@@ -46,20 +58,24 @@ class RegisterView(APIView):
 
             token = Token.objects.create(user=user)
 
-            return Response(data={"token": token.key, "user_id": user.id}, status=HTTP_200_OK)
+            return Response(data={"token": token.key, "user_id": user.id}, status=HTTP_201_CREATED)
 
         else:
             return Response(data=serializer.errors, status=HTTP_400_BAD_REQUEST)
 
 
-class LoginView(APIView):
+class LoginView(CreateAPIView):
     """ User Login View """
 
     permission_classes = [AllowAny]
+    serializer_class = serializers.LoginSerializer
 
     def post(self, request):
-        email = request.data.get('email')
+        email = request.data.get('email', None)
         password = request.data.get('password')
+
+        if not email:
+            return Response({"detail": "email field can't be empty"})
 
         try:
             instance = NewUser.objects.get(email=email)
@@ -90,3 +106,8 @@ class UserActionView(RetrieveAPIView, UpdateAPIView):
     queryset = NewUser.objects.all()
     serializer_class = serializers.UserDetailSerializer
     lookup_field = 'id'
+
+class LogoutView(APIView):
+    def get(self, request):
+        request.user.auth_token.delete()
+        return Response(data={"detail": "User Logged out successfully"}, status=HTTP_200_OK)
