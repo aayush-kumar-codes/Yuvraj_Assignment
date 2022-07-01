@@ -18,18 +18,16 @@ class UploadCities(APIView):
     schema=None
     permission_classes = [AllowAny]
     def get(self, request):
-        import json
-        file=open("countries.json")
-        print("JJJJJJJJJJJ",type(file))
-        for data in json.load(file):
-            response = requests.post(url="https://countriesnow.space/api/v0.1/countries/cities", json=({"country": data['name']}))
-            try:
-                country = Country.objects.create(country_name=data['name'], country_code=data['code'])
+        country=request.GET.get("country")
+        code=request.GET.get("code")
+        response = requests.post(url="https://countriesnow.space/api/v0.1/countries/cities", json=({"country":country.lower() }))
+        try:
+            country = Country.objects.create(country_name=country, country_code=code)
 
-                json_data = response.json()['data']
+            json_data = response.json()['data']
 
-                for data in json_data[0:20]:
-                    City.objects.create(country=country, city_name=data)
-            except:
-                pass
+            for data in json_data[0:20]:
+                City.objects.create(country=country, city_name=data)
+        except Exception as e:
+            pass
         return Response({})
