@@ -34,3 +34,4 @@ Test Cases for each app has been added and Documentation is done using drf-yasg 
 
 ```
 
+## Note - '/api/v1/upload_cities/' this endpoint is just for uploading test countries and cities data, It does not has any error checkings.
