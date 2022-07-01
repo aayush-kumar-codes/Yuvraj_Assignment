@@ -20,8 +20,9 @@ class UploadCities(APIView):
     def get(self, request):
         country=request.GET.get("country")
         code=request.GET.get("code")
-        response = requests.post(url="https://countriesnow.space/api/v0.1/countries/cities", json=({"country":country.lower() }))
         try:
+            response = requests.post(url="https://countriesnow.space/api/v0.1/countries/cities", json=({"country":country.lower()}))
+
             country = Country.objects.create(country_name=country, country_code=code)
 
             json_data = response.json()['data']
