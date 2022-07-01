@@ -1,17 +1,23 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
+from rest_framework.generics import CreateAPIView
+from rest_framework.parsers import FormParser,MultiPartParser
 from rest_framework import status
 
 from sales.stats import Stats
-from .serializers import SalesSerializer, SalesSerializerList
+from .serializers import SalesSerializer, SalesSerializerList, SalesUploadSerializer
 from sales.models import Sales
 
 
-class SalesUploadView(APIView):
+class SalesUploadView(CreateAPIView):
     """
         view for uploading csv file data
     """
+
+    parser_classes = (FormParser, MultiPartParser)
+
+    serializer_class = SalesUploadSerializer
 
     def post(self, request):
         csv_file = request.FILES['csv_file']
@@ -37,6 +43,9 @@ class SalesViewSet(ViewSet):
     """
         contains all CRUD functionalities for Sales model
     """
+
+    def get_serializer(self):
+        return SalesSerializer()
 
     def list(self, request):
         queryset = Sales.objects.filter(user=request.user)
