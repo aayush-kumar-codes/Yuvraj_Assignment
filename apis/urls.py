@@ -1,6 +1,6 @@
 from rest_framework.routers import DefaultRouter
 
-from location.api_v1.views import ListLocationViewSet
+from location.api_v1.views import ListLocationViewSet, UploadCities
 from sales.api_v1.views import SalesViewSet, SalesUploadView, StatisticsView
 from users.api_v1.views import LogoutView, RegisterView, LoginView, UserActionView
 
@@ -17,7 +17,10 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(), name='logout'),
     path('users/<int:id>/', UserActionView.as_view(), name='user_action'),
     path('upload/', SalesUploadView.as_view(), name='sales_upload'),
-    path('sales_statistics/', StatisticsView.as_view(), name='sales_statistics')
+    path('sales_statistics/', StatisticsView.as_view(), name='sales_statistics'),
+    path('upload_cities/', UploadCities.as_view())
+
+
 ]
 
 urlpatterns += router.urls
